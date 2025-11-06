@@ -1,8 +1,10 @@
-
+# utils.py
 import pygame
 import random
 
-
+# =========================
+# Cores
+# =========================
 BRANCO = (255, 255, 255)
 PRETO = (0, 0, 0)
 VERDE = (0, 200, 0)
@@ -16,11 +18,13 @@ CINZA = (128, 128, 128)
 VERDE_MATRIX = (0, 255, 70)
 PRETO_MATRIX = (0, 0, 0)
 
-
+# =========================
+# Funções de desenho
+# =========================
 def desenhar_texto(tela, texto, x, y, cor, centralizado=False, fonte=None):
     if fonte is None:
         fonte = pygame.font.SysFont("arial", 28)
-    
+    # Esta função continua a mesma para textos curtos e de linha única.
     surf = fonte.render(str(texto), True, cor)
     rect = surf.get_rect()
     if centralizado:
@@ -29,44 +33,44 @@ def desenhar_texto(tela, texto, x, y, cor, centralizado=False, fonte=None):
         rect.topleft = (x, y)
     tela.blit(surf, rect)
 
-
+# ## <<< MUDANÇA: NOVA FUNÇÃO DE TEXTO FORMATADO
 def desenhar_texto_formatado(tela, texto, cor, rect, fonte):
     """
     Desenha um texto com quebra de linha, parágrafos e centralização vertical.
     """
     linhas_finais = []
-    
+    # Suporta múltiplos parágrafos separados por duas quebras de linha
     paragrafos = texto.split('\n\n')
     
     for paragrafo in paragrafos:
         palavras = paragrafo.replace('\n', ' ').split(' ')
         linha_atual = ""
         for palavra in palavras:
-            
+            # Testa se a palavra cabe na linha
             linha_teste = linha_atual + palavra + " "
             if fonte.size(linha_teste)[0] < rect.width:
                 linha_atual = linha_teste
             else:
-                
+                # Se não cabe, finaliza a linha anterior e começa uma nova
                 linhas_finais.append(linha_atual)
                 linha_atual = palavra + " "
         linhas_finais.append(linha_atual)
-        
+        # Adiciona uma linha em branco para servir de espaço entre parágrafos
         linhas_finais.append("")
 
-    
+    # Remove a última linha em branco se for desnecessária
     if linhas_finais and linhas_finais[-1] == "":
         linhas_finais.pop()
 
-    
+    # Calcula a altura total do bloco de texto para poder centralizar
     altura_total_texto = len(linhas_finais) * fonte.get_linesize()
-    
+    # Posição Y inicial para o bloco de texto ficar centralizado verticalmente no rect
     y_inicial = rect.top + (rect.height - altura_total_texto) // 2
     
-    
+    # Desenha cada linha na tela
     for i, linha in enumerate(linhas_finais):
         superficie_linha = fonte.render(linha, True, cor)
-        
+        # Centraliza cada linha horizontalmente dentro do rect
         x_pos = rect.centerx - superficie_linha.get_width() // 2
         y_pos = y_inicial + i * fonte.get_linesize()
         tela.blit(superficie_linha, (x_pos, y_pos))
@@ -109,7 +113,7 @@ def desenhar_fundo_gradiente(tela, cor1, cor2):
         b = int(cor1[2] * (1 - proporcao) + cor2[2] * proporcao)
         pygame.draw.line(tela, (r, g, b), (0, i), (largura, i))
 
-
+# ## <<< MUDANÇA: ATUALIZADO PARA USAR A NOVA FUNÇÃO DE TEXTO
 def desenhar_janela_central(tela, w, h, cor_fundo, cor_borda, titulo="", texto="", fonte_titulo=None, fonte_texto=None):
     if fonte_titulo is None:
         fonte_titulo = pygame.font.SysFont("arialblack", 40)
@@ -124,16 +128,16 @@ def desenhar_janela_central(tela, w, h, cor_fundo, cor_borda, titulo="", texto="
     
     desenhar_texto(tela, titulo, cx, ret_fundo.top + 40, cor_borda, True, fonte_titulo)
 
-    
-    padding_vertical = 100 
+    # Define a área onde o texto formatado será desenhado
+    padding_vertical = 100 # Espaço para o título e margem inferior
     padding_horizontal = 40
     ret_texto = pygame.Rect(
         ret_fundo.left + padding_horizontal, 
         ret_fundo.top + padding_vertical, 
         w - padding_horizontal * 2, 
-        h - padding_vertical * 1.5 
+        h - padding_vertical * 1.5 # Ajustado para dar mais margem
     )
-    
+    # Chama a nova função de texto formatado
     desenhar_texto_formatado(tela, texto, cor_borda, ret_texto, fonte_texto)
 
 def desenhar_controle_volume(tela, x, y, fonte, volume, click_sound=None):
