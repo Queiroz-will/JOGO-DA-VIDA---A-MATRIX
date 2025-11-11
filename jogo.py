@@ -154,7 +154,7 @@ def puxar_carta(peao):
     if peao["buff_ativo"]:
         
         chance = random.randint(1, 10)
-        if chance <= 7: 
+        if chance <= 8: 
             carta_atual = random.choice(cartas_boas)
         else: 
             carta_atual = random.choice(cartas_ruins)

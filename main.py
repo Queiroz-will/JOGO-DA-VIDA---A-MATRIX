@@ -807,8 +807,8 @@ def desenhar_mostrar_buff():
     # Texto (mantendo 70% para bater com jogo.py)
     texto = (f"Saudações, {nome_jogador}. Não desista. Eu estou aqui com você.\n\n"
              "**BUFF ATIVO:**\n"
-             "Suas chances de pegar cartas Boas aumentaram para **70%**.\n"
-             "Suas chances de pegar cartas Ruins caíram para **30%**.\n\n"
+             "Suas chances de pegar cartas Boas aumentaram para **80%**.\n"
+             "Suas chances de pegar cartas Ruins caíram para **20%**.\n\n"
              f"*Pressione sua tecla ({tecla_str}) para continuar...*")
 
     # Desenha a janela do Neo
