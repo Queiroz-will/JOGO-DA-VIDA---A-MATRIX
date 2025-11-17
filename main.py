@@ -1,6 +1,5 @@
-# main.py (Atualizado com "Buff do Neo" e Animação "Sem Teleporte")
-# ## MUDANÇA: Corrigido Lag do Loading + Adicionado Nomes nos Peões
-# ## MUDANÇA: Corrigida Música tocando sobre a Cutscene
+# main.py
+# Versão Final: Loading, Música Corrigida, Nomes Dinâmicos e Buff Visual
 
 import pygame
 import sys
@@ -24,7 +23,7 @@ TELA = pygame.display.set_mode((LARGURA, ALTURA), pygame.RESIZABLE)
 pygame.display.set_caption("Jogo da Vida - A Matrix (Carregando...)")
 
 # =====================================================================================
-# ## <<< NOVO: TELA DE LOADING
+# TELA DE LOADING
 # =====================================================================================
 
 # Carrega APENAS as fontes necessárias para o loading
@@ -48,61 +47,42 @@ class LoadingRain:
         self.vel = [random.randint(2, 6) for _ in range(self.colunas)]
         self.caracteres = ['0', '1']
 
-    # Removido o "fade" que causava lag
     def desenhar(self, tela):
         cor_verde = (0, 255, 70)
-        
         for i in range(self.colunas):
             char = random.choice(self.caracteres)
             try:
                 surf = self.fonte.render(char, True, cor_verde)
             except:
                 surf = pygame.font.SysFont(None, 22).render(char, True, cor_verde)
-                
             x = i * self.tam_fonte_w
             y = self.y_pos[i]
-            
             if 0 <= y <= self.altura:
                 tela.blit(surf, (x, y))
-                
             self.y_pos[i] = self.y_pos[i] + self.vel[i]
-            
             if self.y_pos[i] > self.altura:
                 self.y_pos[i] = random.randint(-100, 0)
 
-# Função de loading agora limpa a tela (rápido)
 def desenhar_tela_loading(progresso, total, rain_effect):
-    # 1. Limpa a tela
     TELA.fill(PRETO_MATRIX)
-    
-    # 2. Desenha a chuva de 0s e 1s
     rain_effect.desenhar(TELA)
-    
-    # 3. Desenha o texto central
     texto_surf = fonte_loading_titulo.render("ENTRANDO NA MATRIX, PREPARE-SE", True, BRANCO)
     texto_rect = texto_surf.get_rect(center=(LARGURA // 2, ALTURA // 2))
     TELA.blit(texto_surf, texto_rect)
 
-    # 4. Desenha a barra de progresso
     bar_w = LARGURA * 0.6
     bar_h = 30
     bar_x = LARGURA // 2 - bar_w // 2
     bar_y = ALTURA * 0.75
-    
     percent = progresso / total
     current_w = max(0, bar_w * percent)
     
-    # Fundo da barra
     pygame.draw.rect(TELA, (50, 50, 50), (bar_x, bar_y, bar_w, bar_h), border_radius=5)
-    # Barra de progresso
     pygame.draw.rect(TELA, VERDE_MATRIX, (bar_x, bar_y, current_w, bar_h), border_radius=5)
-    # Contorno
     pygame.draw.rect(TELA, BRANCO, (bar_x, bar_y, bar_w, bar_h), 2, border_radius=5)
-    
     pygame.display.flip()
 
-# Todas as variáveis de assets são pré-declaradas
-# Fontes
+# Variáveis de assets pré-declaradas
 fonte = None
 fonte_titulo = None
 fonte_subtitulo = None
@@ -110,7 +90,6 @@ fonte_botao = None
 fonte_mono = None
 fonte_prologo = None
 fonte_peao_nome = None 
-# Sons
 VOLUME_GERAL = 1.0  
 VOLUME_MUSICA = 0.5 
 VOLUME_EFEITOS = 0.5 
@@ -120,7 +99,6 @@ dice_roll_sound = None
 falha_sound = None
 splash_sound = None
 cutscene_sound = None
-# Sprites
 personagem_sprites = {}
 selecao_sprites = {}
 peao_sprites = {}
@@ -132,20 +110,16 @@ DADO_TAMANHO = (180, 180)
 dice_roll_sprites = []
 dice_result_sprites = {}
 
-# Função "Generator" para carregar tudo
 def carregar_assets():
     global fonte, fonte_titulo, fonte_subtitulo, fonte_botao, fonte_mono, fonte_prologo, fonte_peao_nome
     global click_sound, move_sound, dice_roll_sound, falha_sound, splash_sound, cutscene_sound
     global personagem_sprites, selecao_sprites, peao_sprites, splash_frames, cutscene_frames, regras_bg_sprite
     global dice_roll_sprites, dice_result_sprites
 
-    # Contagem total de assets para a barra de progresso
     total_assets = 7 + 7 + len(personagens_nomes_cartas) + (4*2) + 1 + (6*2) + 188 + 171 
     progresso = 0
 
-    # ----------------------------
     # 1. Fontes
-    # ----------------------------
     fonte = pygame.font.SysFont("arial", 28)
     progresso += 1; yield progresso, total_assets
     fonte_titulo = pygame.font.SysFont("arialblack", 70)
@@ -161,9 +135,7 @@ def carregar_assets():
     fonte_peao_nome = pygame.font.SysFont("arial", 18, bold=True) 
     progresso += 1; yield progresso, total_assets
 
-    # ----------------------------
     # 2. Sons
-    # ----------------------------
     pygame.mixer.music.set_volume(VOLUME_GERAL * VOLUME_MUSICA)
     try:
         pygame.mixer.music.load(os.path.join("assets", "musica_menu.mp3"))
@@ -206,9 +178,7 @@ def carregar_assets():
     except Exception as e: print(f"⚠️ Som 'cutcine.mp3' não encontrado: {e}")
     progresso += 1; yield progresso, total_assets
     
-    # ----------------------------
-    # 3. Carregamento de Sprites
-    # ----------------------------
+    # 3. Sprites
     for nome in personagens_nomes_cartas:
         try:
             imagem = pygame.image.load(os.path.join("assets", "images", f"{nome}.png")).convert_alpha()
@@ -227,17 +197,14 @@ def carregar_assets():
         except Exception as e: print(f"⚠️ Sprite do programador {i} não encontrada: {e}")
 
     print("Carregando splash (188 frames)...")
-    for i in range(1, 189): # De 0001.png até 0188.png
+    for i in range(1, 189): 
         try:
             img = pygame.image.load(os.path.join("assets", "frames_splash", f"{i:04d}.png")).convert_alpha()
             splash_frames.append(img)
         except Exception as e: print(f"⚠️ Frame do Splash '{i:04d}.png' não encontrado: {e}")
-        
         if i % 5 == 0:
-            progresso += 5
-            yield progresso, total_assets
-    progresso += 188 % 5 
-    yield progresso, total_assets
+            progresso += 5; yield progresso, total_assets
+    progresso += 188 % 5; yield progresso, total_assets
     print("Splash carregado.")
 
     try:
@@ -249,34 +216,28 @@ def carregar_assets():
         try:
             img = pygame.image.load(os.path.join("assets", "dados", f"ROLL_{i:02d}.png")).convert_alpha()
             dice_roll_sprites.append(pygame.transform.scale(img, DADO_TAMANHO))
-        except Exception as e: print(f"⚠️ Sprite de dado 'ROLL_{i:02d}.png' não encontrada: {e}")
+        except Exception as e: print(f"⚠️ Sprite de dado 'ROLL_{i:02d}.png' não encontrado: {e}")
         progresso += 1; yield progresso, total_assets
 
     for i in range(1, 7): 
         try:
             img = pygame.image.load(os.path.join("assets", "dados", f"DADO_{i}.png")).convert_alpha()
             dice_result_sprites[i] = pygame.transform.scale(img, DADO_TAMANHO)
-        except Exception as e: print(f"⚠️ Sprite de dado 'DADO_{i}.png' não encontrada: {e}")
+        except Exception as e: print(f"⚠️ Sprite de dado 'DADO_{i}.png' não encontrado: {e}")
         progresso += 1; yield progresso, total_assets
 
     print("Carregando cutscene (171 frames)... Isso pode levar um momento.")
-    for i in range(1, 172): # De 0001.png até 0171.png
+    for i in range(1, 172): 
         try:
             img = pygame.image.load(os.path.join("assets", "frames_cutscene", f"{i:04d}.png")).convert_alpha()
             cutscene_frames.append(img)
         except Exception as e: print(f"⚠️ Frame da Cutscene '{i:04d}.png' não encontrado: {e}")
-        
         if i % 5 == 0:
-            progresso += 5
-            yield progresso, total_assets
-    progresso += 171 % 5 
-    yield progresso, total_assets
+            progresso += 5; yield progresso, total_assets
+    progresso += 171 % 5; yield progresso, total_assets
     print("Cutscene carregada.")
 
-# =====================================================================================
-# ## <<< NOVO: LOOP DE LOADING (LÓGICA)
-# =====================================================================================
-
+# LOOP DE LOADING
 loading_rain_effect = LoadingRain(LARGURA, ALTURA, fonte_loading_rain)
 asset_loader = carregar_assets() 
 carregando = True
@@ -303,20 +264,15 @@ while carregando:
     pygame.time.delay(1) 
 
 # =====================================================================================
-# ## <<< FIM DO LOADING: O JOGO COMEÇA AQUI
+# FIM DO LOADING - JOGO COMEÇA
 # =====================================================================================
 
-# ----------------------------
-# Inicialização do Jogo
-# ----------------------------
 pygame.display.set_caption("Jogo da Vida - A Matrix") 
 jogo.criar_tabuleiro(LARGURA, ALTURA) 
 jogo.criar_jogadores(num_jogadores=2) 
 rain_effect = MatrixRain(LARGURA, ALTURA, fonte_mono) 
 
-# ----------------------------
-# Estados do Jogo
-# ----------------------------
+# Estados
 SPLASH_SCREEN = "splash_screen"
 MENU = "menu"
 OPCOES = "opcoes"
@@ -346,18 +302,15 @@ estado_anterior_opcoes = None
 jogador_com_buff = None 
 pilula_final_peao = None 
 
-# Variáveis para o Prólogo "Star Wars"
 prologo_scroll_y = ALTURA
 PROLOGO_SCROLL_SPEED = 0.85 
 PROLOGO_LINES = [] 
 
-# Variáveis para o Epílogo "Star Wars"
 epilogo_scroll_y = ALTURA
 EPILOGO_SCROLL_SPEED = 0.85 
 EPILOGO_LINES = []
 fim_scroll_acabou = False 
 
-# Variáveis para o sistema de animação
 animacao_em_andamento = False
 peao_animando = None
 passos_restantes = 0
@@ -370,20 +323,17 @@ frame_atual = 0
 timer_frame = 0 
 TEMPO_FRAME = 200
 
-# Variáveis de controle para Splash
 splash_frame_atual = 0
 splash_timer_frame = 0
-TEMPO_FRAME_SPLASH = 1000 // 24 # 24fps
+TEMPO_FRAME_SPLASH = 1000 // 24 
 splash_anim_concluida = False
 splash_som_iniciado = False
 
-# Variáveis para a Cutscene
 cutscene_frame_atual = 0
 cutscene_timer_frame = 0
-TEMPO_FRAME_CUTSCENE = 1000 // 24 # 24fps
+TEMPO_FRAME_CUTSCENE = 1000 // 24 
 cutscene_som_iniciado = False
 
-# Variáveis de controle para Animação de Dado
 estado_anim_dado = "nenhum" 
 timer_anim_dado = 0
 dado_frame_atual = 0 
@@ -393,7 +343,6 @@ DURACAO_ANIM_DADO = 1000
 DURACAO_MOSTRAR_DADO = 1000 
 TEMPO_FRAME_DADO = 50      
 
-# Definição das áreas dos botões
 rects_botoes_menu = {}
 rects_botoes_opcoes = {}
 rects_botoes_qtd = {}
@@ -406,21 +355,18 @@ rects_botoes_regras = {}
 rects_botoes_fim = {} 
 
 # =====================================================================================
-# FUNÇÕES DE DESENHO DE TELA
+# FUNÇÕES DE DESENHO
 # =====================================================================================
 
 def desenhar_splash_screen():
     TELA.fill(PRETO_MATRIX)
-    
     if splash_frames and splash_frame_atual < len(splash_frames): 
         frame_original = splash_frames[splash_frame_atual]
         frame_esticado = pygame.transform.scale(frame_original, (LARGURA, ALTURA))
         TELA.blit(frame_esticado, (0, 0))
-    
     elif not splash_frames: 
         desenhar_texto(TELA, "JOGO DA VIDA - A MATRIX", LARGURA//2, ALTURA//2 - 50, BRANCO, True, fonte_titulo)
         desenhar_texto(TELA, "APERTE QUALQUER TECLA PARA COMEÇAR", LARGURA//2, ALTURA - 100, BRANCO, True, fonte_botao)
-    
     if splash_anim_concluida:
         desenhar_texto(TELA, "Jogo da Vida - A Matrix", LARGURA//2, ALTURA * 0.2, BRANCO, True, fonte_titulo)
         desenhar_texto(TELA, "APERTE QUALQUER TECLA PARA COMEÇAR", LARGURA//2, ALTURA - 100, BRANCO, True, fonte_botao)
@@ -634,13 +580,15 @@ def desenhar_hud():
     teclas_legenda = ["A", "G", "J", "L"]
     for i, p in enumerate(jogo.peoes):
         cor = AMARELO if i == jogo.jogador_atual else VERDE_MATRIX
-        desenhar_texto(TELA, f"{p['nome']} [{teclas_legenda[i]}] - Casa: {p['pos']+1}", 30, y0 + i*30, cor, False, fonte_mono)
+        texto_status = f"{p['nome']} [{teclas_legenda[i]}] - Casa: {p['pos']+1}"
+        if p.get("buff_ativo"):
+            texto_status += " [BUFF ATIVO]"
+        desenhar_texto(TELA, texto_status, 30, y0 + i*30, cor, False, fonte_mono)
     jogador_da_vez = jogo.peoes[jogo.jogador_atual]
     desenhar_texto(TELA, f"Vez de: {jogador_da_vez['nome']}", LARGURA - 250, 20, AMARELO, True, fonte_mono)
     if "dado" in jogador_da_vez and jogador_da_vez['dado'] > 0 and estado_anim_dado == "nenhum":
         desenhar_texto(TELA, f"Dado rolado: {jogador_da_vez['dado']}", LARGURA - 250, 50, BRANCO, True, fonte_mono)
 
-# Função de desenhar o jogo agora inclui os NOMES
 def desenhar_jogo():
     global frame_atual, timer_frame
     TELA.fill(PRETO_MATRIX)
@@ -648,16 +596,17 @@ def desenhar_jogo():
     desenhar_tabuleiro()
     desenhar_linhas_tabuleiro()
     
-    # Animação dos sprites dos peões
     timer_frame += clock.get_time()
     if timer_frame > TEMPO_FRAME:
         timer_frame = 0; frame_atual = (frame_atual + 1) % 2
         
-    # Desenha os peões e seus nomes
     for i, p in enumerate(jogo.peoes):
         char_id = p.get("personagem_id")
         idx = min(p["pos"], len(jogo.CASAS)-1)
         x, y = jogo.CASAS[idx]
+        cor_nome = BRANCO
+        if p.get("buff_ativo"):
+            cor_nome = (0, 255, 0)
         
         if char_id in peao_sprites:
             spritesheet = peao_sprites[char_id]
@@ -666,31 +615,25 @@ def desenhar_jogo():
             peao_img = spritesheet.subsurface(frame_rect)
             peao_img_redimensionada = pygame.transform.scale(peao_img, (65, 65))
             peao_rect = peao_img_redimensionada.get_rect(center=(x + jogo.CASA_TAM//2, y + jogo.CASA_TAM//2))
-            
             TELA.blit(peao_img_redimensionada, peao_rect)
-            
-            # Desenha o nome do jogador acima do sprite
-            nome_jogador = p['nome']
-            nome_x = peao_rect.centerx
-            nome_y = peao_rect.top - 10 # 10 pixels acima
-            desenhar_texto(TELA, nome_jogador, nome_x, nome_y, BRANCO, True, fonte_peao_nome)
-            
+            if i == jogo.jogador_atual:
+                nome_jogador = p['nome']
+                nome_x = peao_rect.centerx
+                nome_y = peao_rect.top - 10 
+                desenhar_texto(TELA, nome_jogador, nome_x, nome_y, cor_nome, True, fonte_peao_nome)
         else:
-            # Fallback (círculo), também com nome
             offset = (i - (num_jogadores-1)/2) * 15
             circ_x = x + jogo.CASA_TAM//2 + offset
             circ_y = y + jogo.CASA_TAM//2
             pygame.draw.circle(TELA, p["cor"], (circ_x, circ_y), 20)
-            
-            # Desenha o nome do jogador acima do círculo
-            nome_jogador = p['nome']
-            nome_x = circ_x
-            nome_y = circ_y - 30 # 10 pixels acima do raio de 20
-            desenhar_texto(TELA, nome_jogador, nome_x, nome_y, BRANCO, True, fonte_peao_nome)
+            if i == jogo.jogador_atual:
+                nome_jogador = p['nome']
+                nome_x = circ_x
+                nome_y = circ_y - 30 
+                desenhar_texto(TELA, nome_jogador, nome_x, nome_y, cor_nome, True, fonte_peao_nome)
 
     desenhar_hud()
     
-    # Desenha a janela da carta
     if jogo.mensagem_carta:
         w, h = LARGURA * 0.7, 350
         cx, cy = LARGURA // 2, ALTURA // 2
@@ -711,7 +654,6 @@ def desenhar_jogo():
             tecla_str = pygame.key.name(jogo.peoes[jogo.jogador_atual]['tecla']).upper()
             desenhar_texto(TELA, f"Pressione sua tecla ({tecla_str}) para continuar!", cx, ret_fundo.bottom - 30, AMARELO, True, fonte)
             
-    # Desenha a animação do dado
     if estado_anim_dado == "rolando":
         if dice_roll_sprites: 
             frame = dice_roll_sprites[dado_frame_atual] 
@@ -795,23 +737,17 @@ def desenhar_pausa():
 
 def desenhar_mostrar_buff():
     global jogador_com_buff
-    if not jogador_com_buff: return # Segurança
-    
-    # Desenha o jogo por baixo (com o peão no início)
+    if not jogador_com_buff: return 
     desenhar_jogo()
-
-    # Prepara o texto
     nome_jogador = jogador_com_buff['nome']
     tecla_str = pygame.key.name(jogador_com_buff['tecla']).upper()
     
-    # Texto (mantendo 70% para bater com jogo.py)
     texto = (f"Saudações, {nome_jogador}. Não desista. Eu estou aqui com você.\n\n"
              "**BUFF ATIVO:**\n"
-             "Suas chances de pegar cartas Boas aumentaram para **80%**.\n"
-             "Suas chances de pegar cartas Ruins caíram para **20%**.\n\n"
+             "Suas chances de pegar cartas Boas aumentaram para **70%**.\n"
+             "Suas chances de pegar cartas Ruins caíram para **30%**.\n\n"
              f"*Pressione sua tecla ({tecla_str}) para continuar...*")
 
-    # Desenha a janela do Neo
     w, h = LARGURA * 0.7, 450 
     cx, cy = LARGURA // 2, ALTURA // 2
     ret_fundo = pygame.Rect(cx - w // 2, cy - h // 2, w, h)
@@ -833,15 +769,15 @@ def desenhar_mostrar_buff():
     ret_texto = pygame.Rect(ret_fundo.left + padding, y_pos_texto, w - padding*2, h - (y_pos_texto - ret_fundo.top) - 60)
     desenhar_texto_formatado(TELA, texto, BRANCO, ret_texto, fonte)
 
+# =====================================================================================
+# LOOP PRINCIPAL
+# =====================================================================================
 
 rodando = True
 clock = pygame.time.Clock()
 posicao_final_texto_prologo = 0 
 posicao_final_texto_epilogo = 0 
 
-# =====================================================================================
-# ## <<< LOOP PRINCIPAL DO JOGO
-# =====================================================================================
 while rodando:
     delta_time = clock.tick(60)
     eventos = pygame.event.get()
@@ -878,7 +814,7 @@ while rodando:
                 elif estado == REGRAS:
                     if "iniciar" in rects_botoes_regras and rects_botoes_regras["iniciar"].collidepoint(mouse_pos):
                         if click_sound: click_sound.play()
-                        pygame.mixer.music.stop() # ## <<< MUDANÇA: Para a música do menu
+                        pygame.mixer.music.stop() 
                         estado = CUTSCENE
                         cutscene_frame_atual = 0
                         cutscene_timer_frame = 0
@@ -1012,10 +948,8 @@ while rodando:
         if evento.type == pygame.KEYDOWN:
             if estado == SPLASH_SCREEN: 
                 estado = MENU 
-                if splash_sound:
-                    splash_sound.stop()
-                if not pygame.mixer.music.get_busy(): 
-                    pygame.mixer.music.play(-1)
+                if splash_sound: splash_sound.stop()
+                if not pygame.mixer.music.get_busy(): pygame.mixer.music.play(-1)
             
             elif estado == PROLOGO:
                 PROLOGO_LINES = [] 
@@ -1024,11 +958,10 @@ while rodando:
             elif estado == CUTSCENE:
                 estado = JOGO 
                 if cutscene_sound: cutscene_sound.stop()
-                if not pygame.mixer.music.get_busy(): # ## <<< MUDANÇA: Toca a música
-                    pygame.mixer.music.play(-1)
+                if not pygame.mixer.music.get_busy(): pygame.mixer.music.play(-1)
                 
             elif estado == REGRAS: 
-                pygame.mixer.music.stop() # ## <<< MUDANÇA: Para a música do menu
+                pygame.mixer.music.stop() 
                 estado = CUTSCENE 
                 cutscene_frame_atual = 0
                 cutscene_timer_frame = 0
@@ -1046,19 +979,15 @@ while rodando:
                     if ch and len(ch) == 1 and ch.isprintable() and len(nomes[foco_jogador]) < 18: nomes[foco_jogador] += ch
             
             elif estado == PILULA_FALHA:
-                jogador_com_buff = pilula_final_peao # Salva quem falhou
-
+                jogador_com_buff = pilula_final_peao 
                 if not jogador_com_buff["buff_ativo"]:
                     jogador_com_buff["buff_ativo"] = True
-                
                 movimento = 0 - jogador_com_buff["pos"] 
-                
                 animacao_em_andamento = True
                 peao_animando = jogador_com_buff
                 passos_restantes = abs(movimento)
                 passos_direcao = -1 
                 o_que_fazer_depois_anim = "MOSTRAR_BUFF" 
-
                 estado = JOGO 
 
             elif estado == MOSTRAR_BUFF:
@@ -1067,39 +996,30 @@ while rodando:
                     jogador_com_buff = None 
             
             elif estado == FIM:
-                if not fim_scroll_acabou: 
-                    fim_scroll_acabou = True 
+                if not fim_scroll_acabou: fim_scroll_acabou = True 
             
             elif estado == JOGO:
                 if evento.key == pygame.K_ESCAPE:
                     estado = PAUSA
                     pygame.mixer.music.pause() 
-                
                 elif not jogador_com_buff:
                     jogador = jogo.peoes[jogo.jogador_atual]
                     if evento.key == jogador["tecla"]:
-                        
                         if not animacao_em_andamento and not jogo.aguardando_carta and estado_anim_dado == "nenhum":
                             estado_anim_dado = "rolando"
                             timer_anim_dado = 0
                             dado_frame_timer = 0
                             dado_frame_atual = 0
-                            if dice_roll_sound:
-                                dice_roll_sound.stop() 
-                                dice_roll_sound.play()
-                        
+                            if dice_roll_sound: dice_roll_sound.stop(); dice_roll_sound.play()
                         elif jogo.aguardando_carta:
                             efeitos = jogo.aplicar_carta(jogador, jogo.carta_atual)
-                            
                             jogo.aguardando_carta = False
                             jogo.mensagem_carta = None
                             jogador['dado'] = 0 
-
                             movimento = 0
                             destino_final = jogador["pos"]
                             passos_direcao = 1
                             animacao_replay = efeitos.get("replay", False) 
-                            
                             if "mov" in efeitos:
                                 movimento = efeitos["mov"] 
                             elif "voltar_turno" in efeitos:
@@ -1107,18 +1027,15 @@ while rodando:
                             elif "voltar_inicio_fileira" in efeitos:
                                 destino_final = (jogador["pos"] // 8) * 8
                                 movimento = destino_final - jogador["pos"] 
-                            
                             if movimento != 0:
                                 destino_final = jogador["pos"] + movimento
                                 destino_final = max(0, min(jogo.NUM_CASAS - 1, destino_final))
                                 movimento = destino_final - jogador["pos"]
-
                                 animacao_em_andamento = True
                                 peao_animando = jogador
                                 passos_restantes = abs(movimento)
                                 passos_direcao = 1 if movimento > 0 else -1
                                 o_que_fazer_depois_anim = "AVANCAR_TURNO" 
-                            
                             else:
                                 jogo.avancar_turno(replay=animacao_replay)
             
@@ -1128,25 +1045,20 @@ while rodando:
                     pygame.mixer.music.unpause() 
                     estado_anterior_opcoes = None 
 
-    # Lógica de atualização (só roda se não estiver pausado)
     if estado != PAUSA:
         if estado == SPLASH_SCREEN:
             if not splash_som_iniciado:
-                if splash_sound:
-                    splash_sound.play()
+                if splash_sound: splash_sound.play()
                 splash_som_iniciado = True
-
             if not splash_anim_concluida and splash_frames:
                 splash_timer_frame += delta_time
                 if splash_timer_frame > TEMPO_FRAME_SPLASH:
                     splash_timer_frame = 0
                     splash_frame_atual += 1
-                
                 if splash_frame_atual >= len(splash_frames):
                     splash_frame_atual = len(splash_frames) - 2 
                     splash_anim_concluida = True
-                    if not pygame.mixer.music.get_busy(): 
-                        pygame.mixer.music.play(-1)
+                    if not pygame.mixer.music.get_busy(): pygame.mixer.music.play(-1)
         
         if estado == PROLOGO:
             prologo_scroll_y -= PROLOGO_SCROLL_SPEED * (delta_time / 16.6) 
@@ -1156,21 +1068,16 @@ while rodando:
 
         if estado == CUTSCENE and cutscene_frames:
             if not cutscene_som_iniciado:
-                if cutscene_sound:
-                    cutscene_sound.play()
+                if cutscene_sound: cutscene_sound.play()
                 cutscene_som_iniciado = True
-
             cutscene_timer_frame += delta_time
             if cutscene_timer_frame > TEMPO_FRAME_CUTSCENE:
                 cutscene_timer_frame = 0
                 cutscene_frame_atual += 1
-            
             if cutscene_frame_atual >= len(cutscene_frames):
                 estado = JOGO 
-                if cutscene_sound:
-                    cutscene_sound.stop() 
-                if not pygame.mixer.music.get_busy(): # ## <<< MUDANÇA: Toca a música
-                    pygame.mixer.music.play(-1)
+                if cutscene_sound: cutscene_sound.stop() 
+                if not pygame.mixer.music.get_busy(): pygame.mixer.music.play(-1)
         
         if estado == FIM and not fim_scroll_acabou:
             epilogo_scroll_y -= EPILOGO_SCROLL_SPEED * (delta_time / 16.6)
@@ -1194,15 +1101,12 @@ while rodando:
             if timer_anim_dado > DURACAO_MOSTRAR_DADO:
                 estado_anim_dado = "nenhum"
                 timer_anim_dado = 0
-                if dice_roll_sound:
-                    dice_roll_sound.stop()
-                
+                if dice_roll_sound: dice_roll_sound.stop()
                 animacao_em_andamento = True
                 peao_animando = jogo.peoes[jogo.jogador_atual]
                 passos_restantes = dado_resultado_sorteado
                 passos_direcao = 1 
                 o_que_fazer_depois_anim = "PUXAR_CARTA"
-                
                 dado_resultado_sorteado = 0 
         
         if animacao_em_andamento:
@@ -1212,29 +1116,22 @@ while rodando:
                 if passos_restantes > 0:
                     peao_animando["pos"] += passos_direcao 
                     passos_restantes -= 1
-                    if move_sound:
-                        move_sound.play()
-                
+                    if move_sound: move_sound.play()
                 if passos_restantes == 0:
                     animacao_em_andamento = False
                     peao_animando["pos"] = max(0, min(jogo.NUM_CASAS - 1, peao_animando["pos"]))
-                    
                     if o_que_fazer_depois_anim == "PUXAR_CARTA":
                         if jogo.is_escolha_pilula_final(peao_animando["pos"]):
                             pilula_final_peao = peao_animando; estado = PILULA_FINAL; jogo.sortear_pilulas_final()
                         else:
                             jogo.puxar_carta(peao_animando) 
-                    
                     elif o_que_fazer_depois_anim == "AVANCAR_TURNO":
                         jogo.avancar_turno(replay=animacao_replay)
                         animacao_replay = False 
-                    
                     elif o_que_fazer_depois_anim == "MOSTRAR_BUFF":
                         estado = MOSTRAR_BUFF
-
                     o_que_fazer_depois_anim = None 
 
-    # Desenho
     TELA.fill(PRETO_MATRIX)
     if estado == SPLASH_SCREEN: desenhar_splash_screen()
     elif estado == MENU: desenhar_menu()
@@ -1242,8 +1139,7 @@ while rodando:
     elif estado == QTD_JOGADORES: desenhar_qtd_jogadores()
     elif estado == NOME: desenhar_nome()
     elif estado == SELECAO_PERSONAGEM: desenhar_selecao_personagem()
-    elif estado == PROLOGO: 
-        posicao_final_texto_prologo = desenhar_prologo() 
+    elif estado == PROLOGO: posicao_final_texto_prologo = desenhar_prologo() 
     elif estado == CUTSCENE: desenhar_cutscene() 
     elif estado == REGRAS: desenhar_regras()
     elif estado == JOGO: desenhar_jogo()
@@ -1251,22 +1147,17 @@ while rodando:
     elif estado == MOSTRAR_BUFF: desenhar_mostrar_buff() 
     elif estado == PILULA_FINAL:
         rects_botoes_pilula = {}
-        # Desenha o jogo por baixo
         rain_effect.update_and_draw(TELA); desenhar_tabuleiro(); desenhar_linhas_tabuleiro()
-        for i, p in enumerate(jogo.peoes): # Desenha os peões
+        for i, p in enumerate(jogo.peoes): 
             char_id = p.get("personagem_id"); idx = min(p["pos"], len(jogo.CASAS)-1); x, y = jogo.CASAS[idx]
             if char_id in peao_sprites:
                 spritesheet = peao_sprites[char_id]; frame_width = spritesheet.get_width() // 2; frame_rect = pygame.Rect(frame_width * frame_atual, 0, frame_width, spritesheet.get_height())
                 peao_img = spritesheet.subsurface(frame_rect); peao_img_redimensionada = pygame.transform.scale(peao_img, (65, 65)); peao_rect = peao_img_redimensionada.get_rect(center=(x + jogo.CASA_TAM//2, y + jogo.CASA_TAM//2))
-                TELA.blit(peao_img_redimensionada, peao_rect); nome_jogador = p['nome']; nome_x = peao_rect.centerx; nome_y = peao_rect.top - 10
-                desenhar_texto(TELA, nome_jogador, nome_x, nome_y, BRANCO, True, fonte_peao_nome)
+                TELA.blit(peao_img_redimensionada, peao_rect)
             else:
                 offset = (i - (num_jogadores-1)/2) * 15; circ_x = x + jogo.CASA_TAM//2 + offset; circ_y = y + jogo.CASA_TAM//2
-                pygame.draw.circle(TELA, p["cor"], (circ_x, circ_y), 20); nome_jogador = p['nome']; nome_x = circ_x; nome_y = circ_y - 30
-                desenhar_texto(TELA, nome_jogador, nome_x, nome_y, BRANCO, True, fonte_peao_nome)
+                pygame.draw.circle(TELA, p["cor"], (circ_x, circ_y), 20)
         desenhar_hud()
-        
-        # Desenha a janela da pílula
         texto_morpheus = ("A voz do Operador soa distorcida...\n\n'É agora! Encontramos uma brecha, mas ela não vai durar.\nUma pílula te levará para a saída... a outra irá te prender ao código-fonte, reiniciando seu loop.\n\nConfie no seu instinto. Acredite.'")
         desenhar_janela_central(TELA, 1200, 500, (10,25,10), VERDE_MATRIX, "A ESCOLHA FINAL", texto_morpheus, fonte_subtitulo, fonte)
         btn_w, btn_h = 400, 100
